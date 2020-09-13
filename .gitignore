@@ -1,0 +1,5 @@
+!EasyExcel/bin/Release/EasyExcel.dll
+/.vs/*
+/packages/*
+/EasyExcel/obj/*
+/EasyExcel/bin/*
