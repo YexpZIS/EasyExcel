@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace EasyExcel
 {
-    abstract class IOExcel
+    public abstract class IOExcel
     {
         protected Elements elements;
         protected ILetterConvertor convertor;
@@ -20,7 +20,7 @@ namespace EasyExcel
         {
             this.elements = elements;
             alphabet = new EN();
-            convertor = new ExcelNumberConverter(alphabet);
+            convertor = new NumberConverter(alphabet);
 
             range = initPoints(new Point[2]);
         }
@@ -34,11 +34,18 @@ namespace EasyExcel
             return points;
         }
 
-        protected abstract int getColumnsCount();
-        protected abstract int getCellsCount();
+        public abstract int getColumnsCount();
+        public abstract int getRowsCount();
+
+        public Point createPoint()
+        {
+            var lang = new EN();
+            var converter = new NumberConverter(lang);
+            return new Point(ref convertor);
+        }
     }
 
-    class Reader : IOExcel
+    public class Reader : IOExcel
     {
         public Reader(ref Elements elements) : base(ref elements)
         { }
@@ -51,7 +58,7 @@ namespace EasyExcel
         public object[,] Read(Point start)
         {
             range[0] = start;
-            range[1].set(getColumnsCount(), getCellsCount());
+            range[1].set(getColumnsCount(), getRowsCount());
             return Read(range[0], range[1]);
         }
         public object[,] Read(Point start, Point end)
@@ -60,17 +67,17 @@ namespace EasyExcel
             return table;
         }
 
-        protected override int getCellsCount()
+        public override int getRowsCount()
+        {
+            return elements.sheet.UsedRange.Rows.Count;
+        }
+        public override int getColumnsCount()
         {
             return elements.sheet.UsedRange.Columns.Count;
         }
-        protected override int getColumnsCount()
-        {
-            return elements.sheet.UsedRange.Cells.Count;
-        }
     }
 
-    class Writer : IOExcel
+    public class Writer : IOExcel
     {
         object[,] table;
 
@@ -87,7 +94,7 @@ namespace EasyExcel
             this.table = table;
             checkOnChar();
             range[0] = start;
-            range[1].set(getColumnsCount() + dataColumnsLength(), getCellsCount() + dataCellsLength());
+            range[1].set(getColumnsCount() + dataColumnsLength(), getRowsCount() + dataCellsLength());
             elements.sheet.Range[range[0].get(), range[1].get()].Value2 = table;
         }
 
@@ -105,7 +112,7 @@ namespace EasyExcel
             }
         }
 
-        protected override int getCellsCount()
+        public override int getRowsCount()
         {
             return table.GetLength(0);
         }
@@ -113,7 +120,7 @@ namespace EasyExcel
         {
             return range[0].y - 1;
         }
-        protected override int getColumnsCount()
+        public override int getColumnsCount()
         {
             return table.GetLength(1);
         }
@@ -133,6 +140,8 @@ namespace EasyExcel
         ILetterConvertor convertor;
         Alphabet alphabet;
 
+        string path = Environment.CurrentDirectory + "/";
+
         object[,] data = new object[,] { { "Name", "Second Name", "Account id" },
                 { "Qml", "DNSmasq", 902 },
                 { null, null, null },
@@ -140,6 +149,15 @@ namespace EasyExcel
                 {123,123,123 },
                 { null, true,912639}
             };
+
+        // data have not null objects
+        object[,] dataFull = new object[,] { { "Name", "Second Name", "Account id" },
+                { "Qml", "DNSmasq", 902 },
+                {"D",218,01 },
+                {123,123,123 },
+                { "test", true,912639}
+            };
+
         string docName = "test.xlsx";
 
 
@@ -152,7 +170,7 @@ namespace EasyExcel
             reader = new Reader(ref elements);
 
             alphabet = new EN();
-            convertor = new ExcelNumberConverter(alphabet);
+            convertor = new NumberConverter(alphabet);
 
             elements.Start();
         }
@@ -208,13 +226,70 @@ namespace EasyExcel
             point1.set(x + data.GetLength(1) - 1, y + data.GetLength(0) - 1);
 
             writer.Write(data, point);
-            elements.Save(docName);
+            elements.Save(path+docName);
 
-            elements.Open(docName);
+            elements.Open(path+docName);
             elements.setWorksheet(activeSheet);
             var result = reader.Read(point, point1);
 
             Assert.AreEqual(result, data);
+        }
+
+        [Test]
+        public void EmptyRead()
+        {
+            elements.createWorkbook();
+            elements.Save(path+docName);
+
+            elements.Stop();
+            elements.Start();
+
+            elements.Open(path+docName);
+            elements.setWorksheet(1);
+
+            Assert.DoesNotThrow(() => { 
+                var result = reader.Read();
+                Assert.AreEqual(result, null);
+            });
+        }
+
+        [Test]
+        public void Read()
+        {
+            createDefaultDocument();
+
+            elements.Stop();
+            elements.Start();
+
+            elements.Open(path + docName);
+            elements.setWorksheet(1);
+            var result = reader.Read();
+
+            Assert.AreEqual(result, dataFull);
+        }
+        [Test]
+        public void SecondRead()
+        {
+            createDefaultDocument();
+
+            elements.Stop();
+            elements.Start();
+
+            elements.Open(path + docName);
+            elements.setWorksheet(1);
+
+            var point = reader.createPoint();
+            point.set(1, 1);
+            var result = reader.Read(point);
+
+            Assert.AreEqual(result, dataFull);
+        }
+        private void createDefaultDocument()
+        {
+            elements.createWorkbook();
+            elements.setWorksheet(1);
+            writer.Write(dataFull);
+            elements.Save(path + docName);
         }
 
         [TearDown]

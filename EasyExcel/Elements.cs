@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ namespace EasyExcel
         {
             excel = new Application();
 
-            // Скрываем excel от глаз пользователя
+            // Скрываем excel от пользователя
             excel.Visible = false;
             excel.DisplayAlerts = false;
         }
@@ -32,10 +33,10 @@ namespace EasyExcel
         /// <summary>
         /// Открываем файл для чтения/записи
         /// </summary>
-        /// <param name="file">Необязательный параметр, имя файла с базой данных</param>
+        /// <param name="file">Имя файла Excel</param>
         public void Open(string file)
         {
-            excel.Workbooks.Open(Environment.CurrentDirectory + "/" + file);
+            excel.Workbooks.Open(file);/*Environment.CurrentDirectory + "/" +*/
         }
 
         /// <summary>
@@ -60,7 +61,7 @@ namespace EasyExcel
         }
 
         /// <summary>
-        /// Функция устанавливает рабочий лист, с которого в последствии можно будет счтитать данные
+        /// Функция устанавливает рабочий лист, с которого в последствии можно будет чтитать данные
         /// </summary>
         /// <param name="index">Номер листа (начинается с '1')</param>
         public void setWorksheet(int index)
@@ -77,8 +78,8 @@ namespace EasyExcel
 
         public bool Save(string file)
         {
-            // Сохраняем файл в директорию, где находится программа (по default сохраняет в Documents)
-            excel.Application.ActiveWorkbook.SaveAs(Environment.CurrentDirectory + "/" + file);
+            // (по default файл сохраняет в папку Documents)
+            excel.Application.ActiveWorkbook.SaveAs(file);/*Environment.CurrentDirectory + "/" +*/
             return true;
         }
 
@@ -106,6 +107,7 @@ namespace EasyExcel
     class ElementsTest
     {
         Elements elements;
+        string path = Environment.CurrentDirectory + "/";
 
         [SetUp]
         public void Start()
@@ -121,7 +123,7 @@ namespace EasyExcel
             {
                 elements.createWorkbook();
                 elements.createSheet(1);
-                elements.Save("test.xlsx");
+                elements.Save(path+"test.xlsx");
             });
         }
 
@@ -146,7 +148,7 @@ namespace EasyExcel
                     elements.createSheet(number);
                 });
             }
-            elements.Save("test.xlsx");
+            elements.Save(path+"test.xlsx");
         }
 
         [TestCase(1, 1, true)]
@@ -172,6 +174,18 @@ namespace EasyExcel
                     elements.setWorksheet(count);
                 });
             }
+        }
+
+        [TestCase("123")]
+        [TestCase("db_1.txt")]
+        [TestCase("MY_BiG_DATABASE_9919128.txt")]
+        public void savedFileName(string name)
+        {
+            elements.createWorkbook();
+
+            Assert.DoesNotThrow(() => { 
+                elements.Save(path+name);          
+            });
         }
 
         [TearDown]

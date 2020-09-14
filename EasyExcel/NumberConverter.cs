@@ -16,11 +16,11 @@ namespace EasyExcel
         void setAlphabet(Alphabet alphabet);
     }
 
-    public class ExcelNumberConverter : ILetterConvertor
+    public class NumberConverter : ILetterConvertor
     {
         private char[] letters;
 
-        public ExcelNumberConverter(Alphabet alphabet)
+        public NumberConverter(Alphabet alphabet)
         {
             setAlphabet(alphabet);
         }
@@ -110,7 +110,7 @@ namespace EasyExcel
 
 
     [TestFixture]
-    class ExcelNumberConverterTest
+    class NumberConverterTest
     {
         ILetterConvertor convertor;
         Alphabet en;
@@ -121,7 +121,7 @@ namespace EasyExcel
         {
             en = new EN();
             ru = new RU();
-            convertor = new ExcelNumberConverter(en);
+            convertor = new NumberConverter(en);
         }
 
         [TestCase(0, "A")]
@@ -219,6 +219,17 @@ namespace EasyExcel
             convertor.setAlphabet(mock.Object);
         }
 
+        [Test]
+        public void notIntegratedTest()
+        {
+            var alphabet = new Mock<Alphabet>();
+            //от 65 до 90 находится английский алфавит
+            alphabet.Setup(x => x.getRange()).Returns(new int[] { 65, 90 });
+
+            var converter = new NumberConverter(alphabet.Object);
+
+            Assert.AreEqual(converter.Convert(54),"BC");
+        }
 
         [OneTimeTearDown]
         public void Stop()

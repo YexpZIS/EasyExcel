@@ -1,4 +1,10 @@
 !EasyExcel/bin/Release/EasyExcel.dll
+
+123.xlsx
+test.xlsx
+db_1.txt
+MY_BiG_DATABASE_9919128.txt
+
 /.vs/*
 /packages/*
 /EasyExcel/obj/*

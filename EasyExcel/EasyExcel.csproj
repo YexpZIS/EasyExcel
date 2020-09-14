@@ -62,7 +62,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Alphabet.cs" />
-    <Compile Include="Class1.cs" />
     <Compile Include="Elements.cs" />
     <Compile Include="IOExcel.cs" />
     <Compile Include="NumberConverter.cs" />

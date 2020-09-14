@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Moq;
 using NUnit.Framework;
 
 
@@ -28,6 +29,7 @@ namespace EasyExcel
             this.x = x;
             this.y = y;
         }
+
     }
 
     [TestFixture]
@@ -43,7 +45,7 @@ namespace EasyExcel
         {
             en = new EN();
             ru = new RU();
-            convertor = new ExcelNumberConverter(en);
+            convertor = new NumberConverter(en);
             point = new Point(ref convertor);
         }
 
@@ -67,6 +69,19 @@ namespace EasyExcel
             point.set(x, y);
             var ex = Assert.Catch<Exception>(() => point.get());
             Assert.AreEqual("Значение не может быть меньше нуля.", ex.Message);
+        }
+
+        [Test]
+        public void notIntegratedTest()
+        {
+            var converter = new Mock<ILetterConvertor>();
+            converter.Setup(x => x.Convert(17)).Returns("R");
+            var converterObj = converter.Object;
+
+            var point = new Point(ref converterObj);
+            point.set(18,9);
+
+            Assert.AreEqual(point.get(), "R9");
         }
 
         [OneTimeTearDown]
