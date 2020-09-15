@@ -36,7 +36,7 @@ namespace EasyExcel
         /// <param name="file">Имя файла Excel</param>
         public void Open(string file)
         {
-            excel.Workbooks.Open(file);/*Environment.CurrentDirectory + "/" +*/
+            excel.Workbooks.Open(file);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace EasyExcel
         public bool Save(string file)
         {
             // (по default файл сохраняет в папку Documents)
-            excel.Application.ActiveWorkbook.SaveAs(file);/*Environment.CurrentDirectory + "/" +*/
+            excel.Application.ActiveWorkbook.SaveAs(file);
             return true;
         }
 
