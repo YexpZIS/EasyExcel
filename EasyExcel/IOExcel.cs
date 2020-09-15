@@ -64,7 +64,26 @@ namespace EasyExcel
         public object[,] Read(Point start, Point end)
         {
             var table = elements.sheet.Range[start.get(), end.get()].Value2;
-            return table;
+            if (table!=null) {
+                return convertToNormal(table);
+            }
+            return null;
+        }
+        private object[,] convertToNormal(object[,] excel)
+        {
+            // Преобразует массив так, чтобы он начинался с нуля
+            int x = excel.GetLength(0);
+            int y = excel.GetLength(1);
+            object[,] mas = new object[x, y];
+
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    mas[i, j] = excel[i + 1, j + 1];
+                }
+            }
+            return mas;
         }
 
         public override int getRowsCount()
@@ -92,10 +111,12 @@ namespace EasyExcel
         public void Write(object[,] table, Point start)
         {
             this.table = table;
-            checkOnChar();
-            range[0] = start;
-            range[1].set(getColumnsCount() + dataColumnsLength(), getRowsCount() + dataCellsLength());
-            elements.sheet.Range[range[0].get(), range[1].get()].Value2 = table;
+            if (table!=null) {
+                checkOnChar();
+                range[0] = start;
+                range[1].set(getColumnsCount() + dataColumnsLength(), getRowsCount() + dataCellsLength());
+                elements.sheet.Range[range[0].get(), range[1].get()].Value2 = table;
+            }
         }
 
         private void checkOnChar()
@@ -233,6 +254,24 @@ namespace EasyExcel
             var result = reader.Read(point, point1);
 
             Assert.AreEqual(result, data);
+        }
+
+        [Test]
+        public void editDocument()
+        {
+            elements.Open(path+docName);
+            elements.setWorksheet(1);
+
+            Point point = reader.createPoint();
+            point.set(5, 5);
+
+            Assert.DoesNotThrow(()=> { 
+                var result = reader.Read();
+                writer.Write(result, point);
+
+                elements.Save(path+docName);
+            });
+
         }
 
         [Test]
